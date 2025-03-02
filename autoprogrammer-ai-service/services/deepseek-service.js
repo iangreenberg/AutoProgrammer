@@ -12,9 +12,10 @@ dotenv.config();
 // DeepSeek API configuration
 const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-coder-plus';
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-coder-33b-instruct';
 const DEEPSEEK_MAX_TOKENS = parseInt(process.env.DEEPSEEK_MAX_TOKENS || '4096', 10);
 const DEEPSEEK_TEMPERATURE = parseFloat(process.env.DEEPSEEK_TEMPERATURE || '0.2');
+const USE_MOCK_IN_DEV = process.env.USE_MOCK_IN_DEV === 'true';
 
 /**
  * Processes a query using the DeepSeek API
@@ -23,10 +24,25 @@ const DEEPSEEK_TEMPERATURE = parseFloat(process.env.DEEPSEEK_TEMPERATURE || '0.2
  * @returns {Promise<string>} - The DeepSeek API response
  */
 export async function processWithDeepSeek(query, requestId) {
-  // If in development mode and no API key, return a mock response
-  if (process.env.NODE_ENV === 'development' && !DEEPSEEK_API_KEY) {
+  // Always use mock in dev mode unless explicitly set to false
+  if (process.env.NODE_ENV === 'development' && USE_MOCK_IN_DEV) {
     console.log(`[${requestId}] Using mock response in development mode`);
     return getMockResponse(query);
+  }
+  
+  // Make sure we have an API key before attempting to call the API
+  if (!DEEPSEEK_API_KEY) {
+    console.error(`[${requestId}] DeepSeek API Key is missing`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[${requestId}] Falling back to mock response due to missing API key`);
+      return getMockResponse(query);
+    } else {
+      throw {
+        status: 500,
+        type: 'Configuration Error',
+        message: 'DeepSeek API Key is not configured'
+      };
+    }
   }
   
   try {
@@ -89,6 +105,12 @@ Your responses should be well-organized, include code examples where appropriate
     // Additional logging for API-specific errors
     if (error.response?.data) {
       console.error(`[${requestId}] DeepSeek API Error Details:`, JSON.stringify(error.response.data, null, 2));
+    }
+    
+    // In development mode, always fall back to mock response on errors
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[${requestId}] Falling back to mock response due to API error: ${error.message}`);
+      return getMockResponse(query);
     }
     
     throw formattedError;

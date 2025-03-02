@@ -27,51 +27,39 @@ function cleanupExpiredEntries() {
   }
 }
 
-// Run cleanup every minute
-setInterval(cleanupExpiredEntries, 60000);
-
 /**
- * Rate limiting middleware
- * Limits requests based on client IP address
+ * Rate limiter middleware
+ * Limits requests based on IP address
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
 function rateLimiter(req, res, next) {
-  // Get client IP
-  const ip = req.ip || 
-             req.headers['x-forwarded-for'] || 
-             req.connection.remoteAddress || 
-             'unknown';
+  const ip = req.ip || req.connection.remoteAddress;
   
-  // Initialize or update timestamp for this IP
-  const now = Date.now();
-  const lastTimestamp = ipTimestamps.get(ip) || 0;
+  // Clean up expired entries periodically
+  cleanupExpiredEntries();
   
-  // Reset count if window has passed
-  if (now - lastTimestamp > WINDOW_MS) {
-    requestCounts.set(ip, 1);
-    ipTimestamps.set(ip, now);
-    return next();
-  }
+  // Get current count for this IP
+  const currentCount = requestCounts.get(ip) || 0;
   
-  // Increment request count
-  const requestCount = (requestCounts.get(ip) || 0) + 1;
-  requestCounts.set(ip, requestCount);
-  ipTimestamps.set(ip, now);
-  
-  // Add rate limit headers
-  res.setHeader('X-RateLimit-Limit', MAX_REQUESTS);
-  res.setHeader('X-RateLimit-Remaining', Math.max(0, MAX_REQUESTS - requestCount));
-  res.setHeader('X-RateLimit-Reset', Math.ceil((lastTimestamp + WINDOW_MS) / 1000));
-  
-  // Check if rate limit exceeded
-  if (requestCount > MAX_REQUESTS) {
+  if (currentCount >= MAX_REQUESTS) {
     return res.status(429).json({
-      status: 'error',
-      message: 'Rate limit exceeded. Please try again later.',
-      retryAfter: Math.ceil((WINDOW_MS - (now - lastTimestamp)) / 1000)
+      error: 'Too many requests',
+      message: `Rate limit exceeded. Please try again in ${Math.ceil(WINDOW_MS / 1000)} seconds.`
     });
   }
+  
+  // Update count and timestamp
+  requestCounts.set(ip, currentCount + 1);
+  ipTimestamps.set(ip, Date.now());
   
   next();
 }
 
+// Set interval to clean up expired entries regularly
+setInterval(cleanupExpiredEntries, WINDOW_MS);
+
+// Export the rate limiter middleware
+export { rateLimiter };
 export default rateLimiter; 

@@ -1,10 +1,46 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AutoProgrammer UI - AI Assistant</title>
+    <title>AutoProgrammer</title>
+    <script>
+      // Error logging
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.message, 'at', e.filename, ':', e.lineno);
+        const errorDiv = document.createElement('div');
+        errorDiv.style.backgroundColor = '#ffdddd';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.margin = '20px';
+        errorDiv.style.border = '1px solid red';
+        errorDiv.style.borderRadius = '5px';
+        errorDiv.innerHTML = '<h3>JavaScript Error:</h3><pre>' + 
+          e.message + '\nAt: ' + e.filename + ':' + e.lineno + '</pre>';
+        document.body.appendChild(errorDiv);
+      });
+
+      // React loading check
+      window.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          const root = document.getElementById('root');
+          if (root && root.children.length === 0) {
+            console.error('React did not render anything in the root element');
+            const errorDiv = document.createElement('div');
+            errorDiv.style.backgroundColor = '#fff3cd';
+            errorDiv.style.padding = '20px';
+            errorDiv.style.margin = '20px';
+            errorDiv.style.border = '1px solid #ffeeba';
+            errorDiv.style.borderRadius = '5px';
+            errorDiv.innerHTML = '<h3>UI Loading Issue</h3>' +
+              '<p>React did not render anything in the root element. ' +
+              'Check the console for more details.</p>' +
+              '<p><a href="/debug-ui.html">Click here for debugging tools</a></p>';
+            document.body.appendChild(errorDiv);
+          }
+        }, 3000);
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -12,7 +12,7 @@ dotenv.config();
 
 // Configuration
 const DEFAULT_AI_SERVICE_URL = 'http://localhost:5000/process';
-const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '30000', 10);
+const AI_SERVICE_TIMEOUT = parseInt(process.env.AI_SERVICE_TIMEOUT || '60000', 10); // Increased to 60 seconds
 
 /**
  * Send a query to the AI Processing Service
@@ -31,6 +31,20 @@ export const processQuery = async (query, metadata = {}, req) => {
     console.log(`[AI-SERVICE] Sending query to AI Processing Service at ${aiServiceUrl}: ${query.substring(0, 50)}...`);
     
     const startTime = Date.now();
+    
+    // First check if the AI service is up
+    try {
+      await axios.get(aiServiceUrl.replace('/process', '/health'), { timeout: 5000 });
+    } catch (error) {
+      console.error('[AI-SERVICE] Health check failed, service may be down');
+      if (process.env.NODE_ENV === 'development') {
+        return { 
+          response: getFallbackResponse(query),
+          source: 'fallback'
+        };
+      }
+      throw new Error('AI service health check failed');
+    }
     
     // Prepare the request to the AI service
     const response = await axios.post(

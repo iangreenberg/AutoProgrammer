@@ -28,6 +28,11 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
+# Set NODE_OPTIONS for Node.js 19+ compatibility
+# This disables the experimental warning for the fetch API
+export NODE_OPTIONS="--no-warnings"
+echo -e "${CYAN}Setting NODE_OPTIONS=${NODE_OPTIONS} for Node.js compatibility${NC}"
+
 BASEDIR="$(pwd)"
 
 # Ensure .env files exist for both services

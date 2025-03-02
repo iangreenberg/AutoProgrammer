@@ -19,7 +19,7 @@ import { processWithDeepSeek } from './services/deepseek-service.js';
 import { formatResponse } from './utils/formatter.js';
 
 // Import rate limiter
-import rateLimiter from './rate-limiter.js';
+import { rateLimiter } from './rate-limiter.js';
 
 // Initialize environment variables
 dotenv.config();

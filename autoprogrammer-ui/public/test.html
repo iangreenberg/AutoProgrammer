@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #3b82f6;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Static Test Page</h1>
+        <p>If you can see this page, the Vite server is correctly serving static files.</p>
+        
+        <button onclick="testApi()">Test API Connection</button>
+        <div id="result">API test results will appear here...</div>
+        
+        <h2>Troubleshooting</h2>
+        <p>If you can see this page but the main app isn't loading, check:</p>
+        <ul>
+            <li>Browser console for JavaScript errors</li>
+            <li>Network tab for failed requests</li>
+            <li>CORS settings in the API Gateway</li>
+            <li>Environment variables in the UI</li>
+        </ul>
+    </div>
+
+    <script>
+        function testApi() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing connection to API Gateway...';
+            
+            fetch('http://localhost:4000/health')
+                .then(response => response.json())
+                .then(data => {
+                    resultDiv.innerHTML = '<strong>Success!</strong> API Gateway is healthy:<br>' + 
+                        JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = '<strong>Error:</strong> Could not connect to API Gateway<br>' +
+                        error.message;
+                });
+        }
+    </script>
+</body>
+</html> 

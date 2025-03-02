@@ -39,12 +39,18 @@ app.use((req, res, next) => {
 });
 
 // Configure middleware
-app.use(cors({
-  origin: FRONTEND_URLS,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// In development mode, we'll use a more permissive CORS policy
+if (process.env.NODE_ENV === 'development') {
+  console.log('Using development CORS settings (allowing all origins)');
+  app.use(cors());
+} else {
+  app.use(cors({
+    origin: FRONTEND_URLS,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+    credentials: true
+  }));
+}
 
 app.use(bodyParser.json({ limit: '1mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
