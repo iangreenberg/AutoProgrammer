@@ -1,62 +1,50 @@
 version: '3.8'
 
 services:
-  api-gateway:
-    build:
-      context: ./autoprogrammer-api
-      dockerfile: Dockerfile
-    container_name: autoprogrammer-api-gateway
-    restart: unless-stopped
+  # Main AutoProgrammer application
+  app:
+    build: .
+    container_name: autoprogrammer-app
     ports:
-      - "4000:4000"
+      - "3000:3000"
+    volumes:
+      - ./outputs:/app/outputs
     environment:
       - NODE_ENV=production
-      - PORT=4000
-      - AI_SERVICE_URL=http://ai-service:5000
-      - FRONTEND_URLS=http://localhost:5173,http://localhost:5174
-      - RATE_LIMIT_MAX_REQUESTS=60
-      - RATE_LIMIT_WINDOW_MS=60000
-    volumes:
-      - ./logs/api-gateway:/app/logs
+      - ENABLE_CURSOR_INTEGRATION=true
     depends_on:
-      - ai-service
+      - output-service
     networks:
       - autoprogrammer-network
 
-  ai-service:
+  # Output processing microservice
+  output-service:
     build:
-      context: ./autoprogrammer-ai-service
+      context: .
       dockerfile: Dockerfile
-    container_name: autoprogrammer-ai-service
-    restart: unless-stopped
-    ports:
-      - "5000:5000"
+    container_name: autoprogrammer-output-service
+    command: node ./services/output-service.js
+    volumes:
+      - ./outputs:/app/outputs
     environment:
       - NODE_ENV=production
-      - PORT=5000
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-      - DEEPSEEK_API_URL=https://api.deepseek.com/v1/chat/completions
-      - DEEPSEEK_MODEL=deepseek-coder-plus
-      - DEEPSEEK_MAX_TOKENS=4096
-      - DEEPSEEK_TEMPERATURE=0.2
-      - GATEWAY_URL=http://api-gateway:4000
-      - RATE_LIMIT_MAX_REQUESTS=30
-      - RATE_LIMIT_WINDOW_MS=60000
-    volumes:
-      - ./logs/ai-service:/app/logs
+      - OUTPUT_DIR=/app/outputs
     networks:
       - autoprogrammer-network
 
-  ui:
+  # Cursor integration microservice
+  cursor-integration:
     build:
-      context: ./autoprogrammer-ui
+      context: .
       dockerfile: Dockerfile
-    container_name: autoprogrammer-ui
-    restart: unless-stopped
-    ports:
-      - "5173:80"
-    depends_on:
-      - api-gateway
+    container_name: autoprogrammer-cursor-integration
+    command: ./last-resort.command
+    volumes:
+      - ./outputs:/app/outputs
+      - ${HOME}/Desktop:/Desktop
+    environment:
+      - NODE_ENV=production
+      - DESKTOP_PATH=/Desktop
     networks:
       - autoprogrammer-network
 

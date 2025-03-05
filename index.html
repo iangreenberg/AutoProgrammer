@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoProgrammer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .status-container {
+            background-color: white;
+            border-radius: 0 0 5px 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .service-status {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-active {
+            background-color: #2ecc71;
+        }
+        
+        .status-inactive {
+            background-color: #e74c3c;
+        }
+        
+        .status-unknown {
+            background-color: #f39c12;
+        }
+        
+        .control-panel {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .output-section {
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .output-box {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AutoProgrammer with Cursor Integration</h1>
+        </header>
+        
+        <div class="status-container">
+            <h2>Service Status</h2>
+            
+            <div class="service-status">
+                <span class="status-indicator status-active" id="app-status"></span>
+                <strong>Main Application:</strong> <span id="app-status-text">Active</span>
+            </div>
+            
+            <div class="service-status">
+                <span class="status-indicator status-unknown" id="output-service-status"></span>
+                <strong>Output Service:</strong> <span id="output-service-status-text">Checking...</span>
+            </div>
+            
+            <div class="service-status">
+                <span class="status-indicator status-unknown" id="cursor-status"></span>
+                <strong>Cursor Integration:</strong> <span id="cursor-status-text">Checking...</span>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h2>Controls</h2>
+            <button id="restart-output-service">Restart Output Service</button>
+            <button id="restart-cursor-integration">Restart Cursor Integration</button>
+            <button id="test-integration">Generate Test Output</button>
+        </div>
+        
+        <div class="output-section">
+            <h2>Log Output</h2>
+            <div class="output-box" id="log-output">Initializing system...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const logOutput = document.getElementById('log-output');
+            const outputServiceStatus = document.getElementById('output-service-status');
+            const outputServiceStatusText = document.getElementById('output-service-status-text');
+            const cursorStatus = document.getElementById('cursor-status');
+            const cursorStatusText = document.getElementById('cursor-status-text');
+            
+            // Add some initial log entries
+            addLogEntry('Application initialized');
+            addLogEntry('Checking services status...');
+            
+            // Set a timeout to simulate checking services
+            setTimeout(() => {
+                updateServiceStatus('output-service', true);
+                addLogEntry('Output service is running');
+            }, 1500);
+            
+            setTimeout(() => {
+                updateServiceStatus('cursor', true);
+                addLogEntry('Cursor integration is running');
+                addLogEntry('System is ready');
+            }, 2500);
+            
+            // Button event listeners
+            document.getElementById('restart-output-service').addEventListener('click', function() {
+                addLogEntry('Restarting output service...');
+                updateServiceStatus('output-service', false);
+                
+                // Simulate restart
+                setTimeout(() => {
+                    updateServiceStatus('output-service', true);
+                    addLogEntry('Output service restarted successfully');
+                }, 1000);
+            });
+            
+            document.getElementById('restart-cursor-integration').addEventListener('click', function() {
+                addLogEntry('Restarting cursor integration...');
+                updateServiceStatus('cursor', false);
+                
+                // Simulate restart
+                setTimeout(() => {
+                    updateServiceStatus('cursor', true);
+                    addLogEntry('Cursor integration restarted successfully');
+                }, 1000);
+            });
+            
+            document.getElementById('test-integration').addEventListener('click', function() {
+                addLogEntry('Generating test output...');
+                
+                // Simulate generating a test output
+                setTimeout(() => {
+                    addLogEntry('Test output generated: test-output.txt');
+                    addLogEntry('Output content copied to clipboard');
+                }, 500);
+            });
+            
+            // Helper function to add log entries
+            function addLogEntry(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = `[${timestamp}] ${message}`;
+                logOutput.innerHTML += entry + '\n';
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+            
+            // Helper function to update service status indicators
+            function updateServiceStatus(service, isActive) {
+                let statusElement, textElement;
+                
+                if (service === 'output-service') {
+                    statusElement = outputServiceStatus;
+                    textElement = outputServiceStatusText;
+                } else if (service === 'cursor') {
+                    statusElement = cursorStatus;
+                    textElement = cursorStatusText;
+                } else {
+                    return;
+                }
+                
+                // Update the status indicator and text
+                statusElement.className = `status-indicator ${isActive ? 'status-active' : 'status-inactive'}`;
+                textElement.textContent = isActive ? 'Active' : 'Inactive';
+            }
+        });
+    </script>
+</body>
+</html> 

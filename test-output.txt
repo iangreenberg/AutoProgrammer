@@ -1,0 +1,14 @@
+THIS IS A TEST OUTPUT FILE
+
+This is sample content to test the integration. 
+The integration should detect this file and display its contents.
+
+Sample code:
+```javascript
+function testFunction() {
+  console.log("Hello world");
+  return true;
+}
+```
+
+This is the end of the test file. 

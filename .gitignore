@@ -1,17 +1,56 @@
-# Dependency directories
+# Node.js dependencies
 node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+/dist
+/build
+/out
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Electron build
+*.app
+*.dmg
+*.pkg
+
+# Log files
+*.log
+logs/
+
+# Processed outputs
+/outputs/processed/
+cursor-output.txt
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+.tmp/
+*.tmp
+*.swp
+*.swo
+
+# Dependency directories
 **/node_modules/
 
 # Environment files
-.env
 **/.env
 
 # Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 **/logs
 
 # Runtime data
@@ -20,18 +59,10 @@ pids
 *.seed
 *.pid.lock
 
-# Build output
-dist/
-build/
-
 # Cache files
 .npm
 .eslintcache
-.DS_Store
 
 # Editor directories and files
-.idea
-.vscode
 *.swp
-*.swo
 *~ 

@@ -33,6 +33,8 @@ function App() {
   const [isOpen, setIsOpen] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState('unknown') // 'connected', 'disconnected', 'unknown'
   const [errorDetails, setErrorDetails] = useState('')
+  const [retryCount, setRetryCount] = useState(0)
+  const [isAutoRetrying, setIsAutoRetrying] = useState(false)
   
   // Default position for the assistant
   const [position, setPosition] = useState({ x: 20, y: 20 })
@@ -88,39 +90,91 @@ function App() {
     setQuery(e.target.value)
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isRetry = false, currentRetryCount = 0) => {
     if (!query.trim()) return
 
+    // If this is a new submission (not a retry), reset the retry count
+    if (!isRetry) {
+      setRetryCount(0)
+      setIsAutoRetrying(false)
+    } else {
+      setRetryCount(currentRetryCount)
+      setIsAutoRetrying(true)
+    }
+
     setLoading(true)
-    setResponse('')
+    if (!isRetry) {
+      setResponse('')
+    } else {
+      setResponse(prevResponse => prevResponse + '\n\nRetrying request... (Attempt ' + currentRetryCount + '/3)')
+    }
     
     try {
-      console.log('Sending query to API:', query);
-      const result = await api.post('/ask', { query });
+      console.log('Sending query to API:', query, isRetry ? `(Retry attempt ${currentRetryCount})` : '');
+      
+      // Increase timeout for retries to give more time
+      const timeoutMs = isRetry ? 90000 : 60000;
+      const result = await api.post('/ask', { query }, { timeout: timeoutMs });
       
       console.log('Received response:', result);
-      setResponse(result.data.response || 'No response received')
+      const responseText = result.data.response || 'No response received';
+      setResponse(responseText)
       setConnectionStatus('connected')
       setErrorDetails('')
+      setIsAutoRetrying(false)
+      
+      // Automatically save to Cursor if the electronAPI is available
+      if (window.electronAPI?.saveToCursor) {
+        try {
+          console.log('Auto-saving response to Cursor...');
+          await window.electronAPI.saveToCursor({
+            content: responseText,
+            query: query
+          });
+          console.log('Successfully auto-saved to Cursor');
+        } catch (saveError) {
+          console.error('Error auto-saving to Cursor:', saveError);
+        }
+      }
     } catch (error) {
       console.error('Error fetching response:', error);
       setConnectionStatus('disconnected');
       
       if (error.code === 'ECONNABORTED') {
-        setResponse('Error: Request timed out. The AI service may be taking too long to respond.')
-        setErrorDetails('Try again with a simpler query or check if the AI service is functioning properly.')
+        // Handle timeout error with auto-retry
+        if (currentRetryCount < 3) {
+          // Auto-retry up to 3 times
+          const nextRetryCount = currentRetryCount + 1;
+          setResponse(`Error: Request timed out. The AI service is taking longer than expected.\n\nAutomatically retrying (${nextRetryCount}/3)...`);
+          setErrorDetails(`Retry ${nextRetryCount}/3 in progress. Please wait...`);
+          
+          // Wait a moment before retrying
+          setTimeout(() => {
+            handleSubmit(true, nextRetryCount);
+          }, 2000);
+        } else {
+          // Give up after 3 retries
+          setResponse('Error: Request timed out after multiple attempts. The AI service may be overloaded.');
+          setErrorDetails('You can try again manually with a simpler query or try again later.');
+          setIsAutoRetrying(false);
+        }
       } else if (error.code === 'ERR_NETWORK') {
         setResponse('Error: Could not connect to the API Gateway.')
         setErrorDetails(`Make sure the API Gateway is available at ${API_GATEWAY_URL}`)
+        setIsAutoRetrying(false);
       } else if (error.response) {
         setResponse(`Error ${error.response.status}: ${error.response.data.message || 'API error occurred.'}`)
         setErrorDetails(`Server responded with error: ${JSON.stringify(error.response.data)}`)
+        setIsAutoRetrying(false);
       } else {
         setResponse('An unexpected error occurred while processing your request.')
         setErrorDetails(error.message)
+        setIsAutoRetrying(false);
       }
     } finally {
-      setLoading(false)
+      if (!isAutoRetrying) {
+        setLoading(false)
+      }
     }
   }
 
@@ -198,10 +252,11 @@ function App() {
                   rows={3}
                 />
                 <button 
-                  onClick={handleSubmit} 
+                  onClick={() => handleSubmit(false, 0)} 
                   disabled={loading || !query.trim() || connectionStatus !== 'connected'}
                 >
-                  {loading ? 'Thinking...' : 'Ask'}
+                  {loading && !isAutoRetrying ? 'Thinking...' : 
+                   isAutoRetrying ? `Auto-Retrying (${retryCount}/3)...` : 'Ask'}
                 </button>
               </div>
               

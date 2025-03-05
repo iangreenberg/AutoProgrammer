@@ -64,8 +64,8 @@ app.use(rateLimiter);
 // Log all requests
 app.use(logRequest);
 
-// Add timeout middleware
-app.use(timeoutHandler(30000)); // 30 second timeout
+// Add timeout middleware - increase to 3 minutes to accommodate retries
+app.use(timeoutHandler(180000)); // 3 minute timeout
 
 // Routes
 // Health check endpoint
@@ -102,6 +102,7 @@ app.post('/ask', [
   
   try {
     // Process the query with the AI service
+    // The processQuery function now handles retries internally
     const result = await processQuery(query, {
       requestId: req.id,
       userAgent: req.headers['user-agent'],
@@ -112,17 +113,13 @@ app.post('/ask', [
     return res.status(200).json({
       success: true,
       response: result.response,
-      metadata: result.metadata
+      metadata: {
+        ...result.metadata,
+        source: result.source
+      }
     });
   } catch (error) {
-    // If the AI service is down and we're in development, use fallback
-    if (error.status === 503 && process.env.NODE_ENV === 'development') {
-      const fallback = getFallbackResponse(query);
-      return res.status(200).json(fallback);
-    }
-    
-    // Otherwise, pass to error handler
-    error.statusCode = error.status || 500;
+    // Pass to error handler
     next(error);
   }
 });

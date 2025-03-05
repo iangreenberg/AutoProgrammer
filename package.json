@@ -1,60 +1,42 @@
 {
-  "name": "autoprogrammer-desktop",
+  "name": "autoprogrammer",
   "version": "1.0.0",
-  "description": "Desktop application for AutoProgrammer",
-  "main": "main.js",
+  "description": "AutoProgrammer with Cursor integration",
+  "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron .",
-    "build": "electron-builder build --mac",
-    "build:mac": "electron-builder build --mac",
-    "build:dmg": "electron-builder build --mac dmg"
-  },
-  "build": {
-    "appId": "com.autoprogrammer.desktop",
-    "productName": "AutoProgrammer",
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dmg",
-        "zip"
-      ],
-      "icon": "icon.icns"
-    },
-    "extraResources": [
-      {
-        "from": "../autoprogrammer-ai-service",
-        "to": "autoprogrammer-ai-service",
-        "filter": ["**/*", "!node_modules/**"]
-      },
-      {
-        "from": "../autoprogrammer-api",
-        "to": "autoprogrammer-api",
-        "filter": ["**/*", "!node_modules/**"]
-      },
-      {
-        "from": "../autoprogrammer-ui/dist",
-        "to": "autoprogrammer-ui",
-        "filter": ["**/*"]
-      }
-    ]
+    "start:simple": "./last-resort.command",
+    "setup": "./setup.sh",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "docker:build": "docker-compose build",
+    "docker:start": "docker-compose up -d",
+    "docker:stop": "docker-compose down"
   },
   "keywords": [
-    "electron",
     "autoprogrammer",
-    "desktop",
-    "ai"
+    "cursor",
+    "integration"
   ],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "electron": "^30.0.0",
-    "electron-builder": "^24.9.1"
-  },
   "dependencies": {
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "electron-is-dev": "^2.0.0",
-    "wait-on": "^7.2.0"
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.6.3"
+  },
+  "build": {
+    "appId": "com.autoprogrammer.app",
+    "productName": "AutoProgrammer",
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "extraResources": [
+      "super-simple.sh",
+      "last-resort.command",
+      ".env.template"
+    ]
   }
 } 

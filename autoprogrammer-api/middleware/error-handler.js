@@ -4,6 +4,7 @@
  */
 
 import { logError } from './logging.js';
+import { getFallbackResponse } from '../services/ai-service.js';
 
 /**
  * Timeout middleware for request handling
@@ -14,8 +15,9 @@ export const timeoutHandler = (timeout = 30000) => {
   return (req, res, next) => {
     // Set a timeout for the request
     req.setTimeout(timeout, () => {
-      const err = new Error('Request timeout');
+      const err = new Error('Request timeout - the server took too long to process your request');
       err.statusCode = 408;
+      err.isTimeout = true;
       next(err);
     });
     next();
@@ -35,6 +37,24 @@ export const notFoundHandler = (req, res, next) => {
 };
 
 /**
+ * Check if an error is a timeout error
+ * @param {Error} err - Error object
+ * @returns {boolean} True if it's a timeout error
+ */
+const isTimeoutError = (err) => {
+  return (
+    err.isTimeout || 
+    err.statusCode === 408 || 
+    err.code === 'ECONNABORTED' || 
+    err.code === 'ETIMEDOUT' ||
+    (err.message && (
+      err.message.includes('timeout') || 
+      err.message.includes('timed out')
+    ))
+  );
+};
+
+/**
  * Global error handler for the application
  * @param {Error} err - Error object
  * @param {Object} req - Express request object
@@ -47,6 +67,28 @@ export const errorHandler = (err, req, res, next) => {
 
   // Set status code
   const statusCode = err.statusCode || err.status || 500;
+
+  // Check if this is a timeout error
+  const isTimeout = isTimeoutError(err);
+  
+  // For timeout errors in development mode, provide a fallback response
+  if (isTimeout && process.env.NODE_ENV === 'development' && req.body?.query) {
+    console.log('[ERROR-HANDLER] Timeout detected, providing fallback response');
+    
+    // Get the query from the request body
+    const query = req.body.query;
+    
+    // Return a fallback response with 200 status
+    return res.status(200).json({
+      success: true,
+      response: `The AI service timed out, but here's a fallback response:\n\n${getFallbackResponse(query)}`,
+      metadata: {
+        source: 'fallback',
+        error: 'timeout',
+        message: err.message
+      }
+    });
+  }
 
   // Format error response
   const errorResponse = {
