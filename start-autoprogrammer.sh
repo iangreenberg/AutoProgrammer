@@ -96,8 +96,9 @@ cat > .env << EOF
 NODE_ENV=development
 PORT=5000
 API_GATEWAY_URL=http://localhost:4000
-DEEPSEEK_API_KEY=your-api-key-here
+DEEPSEEK_API_KEY=sk-4556dc93bbe54e9b8ea29d0e655eb641
 DEEPSEEK_MODEL=deepseek-coder
+USE_MOCK_IN_DEV=false
 EOF
 
 echo -e "${GREEN}AI Service environment configured.${NC}"

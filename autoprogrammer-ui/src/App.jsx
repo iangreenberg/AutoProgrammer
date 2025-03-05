@@ -3,8 +3,28 @@ import Draggable from 'react-draggable'
 import axios from 'axios'
 import './App.css'
 
-// API base URLs - can be overridden with environment variables
-const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:4000';
+// API base URLs - use relative paths for Netlify Functions
+const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || '/api';
+const IS_DEV = import.meta.env.MODE === 'development';
+
+// Default headers for API requests
+const API_HEADERS = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/json'
+};
+
+// Add API key in production only
+if (!IS_DEV && import.meta.env.VITE_API_KEY) {
+  API_HEADERS.Authorization = import.meta.env.VITE_API_KEY;
+}
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_GATEWAY_URL,
+  headers: API_HEADERS,
+  timeout: 60000,
+  withCredentials: false
+});
 
 function App() {
   const [query, setQuery] = useState('')
@@ -39,13 +59,7 @@ function App() {
   const checkApiConnection = async () => {
     try {
       console.log('Checking API connection to:', `${API_GATEWAY_URL}/health`);
-      const response = await axios.get(`${API_GATEWAY_URL}/health`, { 
-        timeout: 3000,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.get('/health');
       
       if (response.status === 200) {
         setConnectionStatus('connected');
@@ -63,7 +77,7 @@ function App() {
       if (error.code === 'ECONNABORTED') {
         setErrorDetails('Connection timed out. API Gateway may be unavailable.');
       } else if (error.code === 'ERR_NETWORK') {
-        setErrorDetails('Cannot connect to API Gateway. Please check if it is running on port 4000.');
+        setErrorDetails(`Cannot connect to API Gateway at ${API_GATEWAY_URL}`);
       } else {
         setErrorDetails(`Error connecting to API Gateway: ${error.message}`);
       }
@@ -82,16 +96,7 @@ function App() {
     
     try {
       console.log('Sending query to API:', query);
-      const result = await axios.post(`${API_GATEWAY_URL}/ask`, 
-        { query }, 
-        { 
-          timeout: 60000,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const result = await api.post('/ask', { query });
       
       console.log('Received response:', result);
       setResponse(result.data.response || 'No response received')
@@ -106,7 +111,7 @@ function App() {
         setErrorDetails('Try again with a simpler query or check if the AI service is functioning properly.')
       } else if (error.code === 'ERR_NETWORK') {
         setResponse('Error: Could not connect to the API Gateway.')
-        setErrorDetails('Make sure the API Gateway is running on localhost:4000.')
+        setErrorDetails(`Make sure the API Gateway is available at ${API_GATEWAY_URL}`)
       } else if (error.response) {
         setResponse(`Error ${error.response.status}: ${error.response.data.message || 'API error occurred.'}`)
         setErrorDetails(`Server responded with error: ${JSON.stringify(error.response.data)}`)

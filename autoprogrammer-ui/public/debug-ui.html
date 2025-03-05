@@ -213,7 +213,13 @@
             const result = document.getElementById('api-test-result');
             result.innerHTML = '<p>Testing connection to API Gateway...</p>';
             
-            fetch('http://localhost:4000/health')
+            fetch('http://localhost:4000/health', {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': window.VITE_API_KEY || 'your-api-key-here'
+                }
+            })
                 .then(response => {
                     if (response.ok) {
                         return response.json().catch(() => 'OK');

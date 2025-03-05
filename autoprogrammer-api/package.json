@@ -2,11 +2,12 @@
   "name": "autoprogrammer-api",
   "version": "1.0.0",
   "description": "API Gateway for AutoProgrammer",
-  "main": "gateway.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node gateway.js",
-    "dev": "NODE_ENV=development nodemon gateway.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step needed'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

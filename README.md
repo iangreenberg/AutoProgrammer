@@ -23,6 +23,8 @@ AutoProgrammer consists of three main microservices:
 
 - Node.js v18+ and npm
 - DeepSeek API key (for production use)
+- Git
+- macOS (for building macOS app)
 
 ## Quick Start
 
@@ -181,4 +183,146 @@ Follow microservice best practices when adding features:
 
 ## License
 
-MIT License 
+MIT License
+
+# AutoProgrammer Desktop App
+
+This is a desktop wrapper for the AutoProgrammer application using Electron.
+
+## Prerequisites
+
+- Node.js and npm installed
+- Git
+- macOS (for building macOS app)
+
+## Setup
+
+1. **Clone the AutoProgrammer repository** (if you haven't already)
+
+```bash
+git clone https://github.com/yourusername/autoprogrammer.git
+cd autoprogrammer
+```
+
+2. **Create a new directory for the desktop app:**
+
+```bash
+mkdir -p autoprogrammer-desktop
+cd autoprogrammer-desktop
+```
+
+3. **Initialize the project:**
+
+```bash
+npm init -y
+npm install electron electron-builder --save-dev
+npm install electron-is-dev --save
+```
+
+4. **Create the main.js file:**
+
+This file will handle starting all the microservices and creating the Electron window.
+
+```javascript
+// Copy the content from the main.js file in this repository
+```
+
+5. **Create the preload.js file:**
+
+```javascript
+// Preload script runs in the renderer process
+window.addEventListener('DOMContentLoaded', () => {
+  // You can expose APIs from here to the renderer if needed
+  console.log('AutoProgrammer Desktop App loaded');
+  
+  // This is where you would add any custom desktop integrations
+  // For example, you could add a function to save content to a file
+});
+```
+
+6. **Update package.json:**
+
+```json
+{
+  "name": "autoprogrammer-desktop",
+  "version": "1.0.0",
+  "description": "Desktop application for AutoProgrammer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder build --mac",
+    "build:mac": "electron-builder build --mac",
+    "build:dmg": "electron-builder build --mac dmg"
+  },
+  "build": {
+    "appId": "com.autoprogrammer.desktop",
+    "productName": "AutoProgrammer",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "icon.icns"
+    },
+    "extraResources": [
+      {
+        "from": "../autoprogrammer-ai-service",
+        "to": "autoprogrammer-ai-service",
+        "filter": ["**/*", "!node_modules/**"]
+      },
+      {
+        "from": "../autoprogrammer-api",
+        "to": "autoprogrammer-api",
+        "filter": ["**/*", "!node_modules/**"]
+      },
+      {
+        "from": "../autoprogrammer-ui/dist",
+        "to": "autoprogrammer-ui",
+        "filter": ["**/*"]
+      }
+    ]
+  }
+}
+```
+
+## Development
+
+To run the application in development mode:
+
+```bash
+npm start
+```
+
+## Building the macOS App
+
+1. First, build the UI:
+
+```bash
+cd ../autoprogrammer-ui
+npm run build
+```
+
+2. Then build the Electron app:
+
+```bash
+cd ../autoprogrammer-desktop
+npm run build:mac
+```
+
+The built application will be available in the `dist` directory.
+
+## Creating an Installer
+
+To create a DMG installer:
+
+```bash
+npm run build:dmg
+```
+
+## Notes
+
+- This is configured to include your DeepSeek API key (`sk-4556dc93bbe54e9b8ea29d0e655eb641`) in the application.
+- The app starts all three microservices: AI Service, API Gateway, and UI.
+- All connections are kept local (localhost). 
